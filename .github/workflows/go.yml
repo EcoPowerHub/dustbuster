@@ -1,0 +1,28 @@
+name: Go
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+        GOPRIVATE: github.com/EcoPowerHub/*
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21.x'
+      - run: git config --global url.https://$GH_TOKEN@github.com/.insteadOf https://github.com/
+      - name: Install dependencies
+        run: go get ./...
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Test with the Go CLI
+        run: go test -v ./...
